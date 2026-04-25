@@ -44,7 +44,7 @@ func main() {
 	}
 }
 
-// Save onion credentials in a directory named after the onion adress
+// Save onion credentials in a directory named after the onion address
 func SaveOnionKeys(onionAddress string, privateKeyHex string, publicKeyHex string) error {
 	dir := filepath.Join("keys", onionAddress)
 
@@ -128,13 +128,13 @@ func OnionFromPublicKey(PublicKeyHex string) string {
 // private/public key pair
 // ends with d for some reason
 // ED25519 elliptic curve
-// onion adress based on the public key
+// onion address based on the public key
 
 // checksum:
 //  bytes of ".onion checksum" + public key + bytes of version number ("\x03")
 //  then put this byte array in SHA3-256 and take first 2 bytes
 
-// adress:
+// address:
 //  Public key + checksum + bytes(\x03) -> put in base32 and append ".onion"
 
 //var version byte = '\x03'
