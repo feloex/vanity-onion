@@ -1,0 +1,9 @@
+.idea/
+*.iml
+*.vscode/
+*.swp
+*.swo
+.DS_Store
+.directory
+logs/
+.keys/
