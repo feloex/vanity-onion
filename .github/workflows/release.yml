@@ -1,0 +1,93 @@
+# Made with much help from AI
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}-${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            goos: linux
+            goarch: amd64
+          - name: linux
+            goos: linux
+            goarch: arm64
+          - name: windows
+            goos: windows
+            goarch: amd64
+          - name: windows
+            goos: windows
+            goarch: arm64
+          - name: macos
+            goos: darwin
+            goarch: amd64
+          - name: macos
+            goos: darwin
+            goarch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build binary
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          TARGET_NAME: ${{ matrix.name }}
+        run: |
+          mkdir -p dist
+          EXT=""
+          if [ "$GOOS" = "windows" ]; then EXT=".exe"; fi
+          OUT="dist/vanity-onion-${TARGET_NAME}-${GOARCH}${EXT}"
+          go build -trimpath -ldflags="-s -w" -o "$OUT" .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vanity-onion-${{ matrix.name }}-${{ matrix.goarch }}
+          path: dist/*
+
+  release:
+    name: Draft Release
+    runs-on: macos-latest
+    needs: build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Prepare files
+        run: |
+          mkdir -p release
+          find dist -type f -exec cp {} release/ \;
+
+          # Create macOS universal binary from amd64 + arm64 builds.
+          lipo -create \
+            release/vanity-onion-macos-amd64 \
+            release/vanity-onion-macos-arm64 \
+            -output release/vanity-onion-macos-universal
+
+          # Keep only the universal macOS binary in the release assets.
+          rm -f release/vanity-onion-macos-amd64 release/vanity-onion-macos-arm64
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: release/*
