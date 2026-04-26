@@ -1,0 +1,46 @@
+name: Deploy WASM to github pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build wasm and get wasm_exec.js
+        run: |
+          # download the wasm_exec.js file from the go repo
+          curl -s -o web/wasm_exec.js https://raw.githubusercontent.com/golang/go/refs/heads/master/lib/wasm/wasm_exec.js
+          GOOS=js GOARCH=wasm go build -o web/main.wasm .
+
+      - name: Setup pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # upload entire web directory as artifact
+          path: './web'
+
+      - name: Deploy to github pages
+        id: deployment
+        uses: actions/deploy-pages@v4 
