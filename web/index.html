@@ -37,6 +37,7 @@
         }
 
         #output {
+            display: none;
             margin-top: 14px;
             padding: 10px;
             border: 1px solid #ccc;
@@ -66,10 +67,17 @@
             const prefix = document.getElementById("prefix").value;
             const result = window.generateVanityOnion(prefix);
             
-            document.getElementById("output").innerText = 
-                "Onion: " + result.onion + "\n" +
+            const outputEl = document.getElementById("output");
+            
+            const prefixmatchlen = prefix.length;
+            const onionString = result.onion;
+            const styledOnion = "<u>" + onionString.substring(0, prefixmatchlen) + "</u>" + onionString.substring(prefixmatchlen);
+
+            outputEl.innerHTML = 
+                "Onion: " + styledOnion + "\n" +
                 "public key: " + result.publicKey + "\n" +
                 "private key: " + result.privateKey;
+            outputEl.style.display = "block";
         }
     </script>
 </head>
@@ -85,6 +93,8 @@
         <input type="text" id="prefix" placeholder="Prefix (e.g. abc)">
         <button onclick="generate()">generate</button>
     </div>
+
+    <hr>
     <pre id="output"></pre>
 </body>
 </html>
