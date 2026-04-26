@@ -4,6 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>vanity-onion</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 710px;
+            margin: 32px auto;
+            padding: 0 16px;
+            line-height: 1.4;
+        }
+
+        a {
+            color: #0b57d0;
+        }
+
+        .header-row,
+        .controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-row {
+            align-items: baseline;
+        }
+
+        .controls {
+            flex-wrap: wrap;
+        }
+
+        input,
+        button {
+            padding: 6px 10px;
+        }
+
+        #output {
+            margin-top: 14px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #f7f7f7;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        p {
+            margin: 0 0 25px;
+        }
+    </style>
     <script src="wasm_exec.js"></script>
     <script>
         const go = new Go();
@@ -25,9 +74,17 @@
     </script>
 </head>
 <body>
-    <h1>vanity-onion</h1>
-    <input type="text" id="prefix" placeholder="Prefix (eg abc)">
-    <button onclick="generate()">generate</button>
+    <div class="header-row"> 
+        <h1>vanity-onion</h1> 
+        <a href="https://github.com/feloex/vanity-onion">GitHub repository</a> 
+    </div>
+
+    <p>Easily generate tor vanity addresses based on a given prefix.</p>
+
+    <div class="controls">
+        <input type="text" id="prefix" placeholder="Prefix (e.g. abc)">
+        <button onclick="generate()">generate</button>
+    </div>
     <pre id="output"></pre>
 </body>
 </html>
