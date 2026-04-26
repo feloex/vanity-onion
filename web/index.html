@@ -36,8 +36,7 @@
             padding: 6px 10px;
         }
 
-        #output {
-            display: none;
+        .output-card {
             margin-top: 14px;
             padding: 10px;
             border: 1px solid #ccc;
@@ -67,17 +66,19 @@
             const prefix = document.getElementById("prefix").value;
             const result = window.generateVanityOnion(prefix);
             
-            const outputEl = document.getElementById("output");
-            
             const prefixmatchlen = prefix.length;
             const onionString = result.onion;
             const styledOnion = "<u>" + onionString.substring(0, prefixmatchlen) + "</u>" + onionString.substring(prefixmatchlen);
 
-            outputEl.innerHTML = 
+            const card = document.createElement("pre");
+            card.className = "output-card";
+            card.innerHTML = 
                 "Onion: " + styledOnion + "\n" +
                 "public key: " + result.publicKey + "\n" +
                 "private key: " + result.privateKey;
-            outputEl.style.display = "block";
+
+            const container = document.getElementById("output-container");
+            container.prepend(card);
         }
     </script>
 </head>
@@ -95,6 +96,6 @@
     </div>
 
     <hr>
-    <pre id="output"></pre>
+    <div id="output-container"></div>
 </body>
 </html>
