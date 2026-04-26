@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vanity-onion</title>
+    <script src="wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance)
+            console.log("loaded wasm")
+        });
+
+        function generate() {
+            const prefix = document.getElementById("prefix").value;
+            const result = window.generateVanityOnion(prefix);
+            
+            document.getElementById("output").innerText = 
+                "Onion: " + result.onion + "\n" +
+                "public key: " + result.publicKey + "\n" +
+                "private key: " + result.privateKey;
+        }
+    </script>
+</head>
+<body>
+    <h1>vanity-onion</h1>
+    <input type="text" id="prefix" placeholder="Prefix (eg abc)">
+    <button onclick="generate()">generate</button>
+    <pre id="output"></pre>
+</body>
+</html>

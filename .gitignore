@@ -6,4 +6,6 @@
 .DS_Store
 .directory
 logs/
-.keys/
+keys/
+main.wasm
+wasm_exec.js

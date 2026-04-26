@@ -1,19 +1,14 @@
+//go:build !js
+
 package main
 
 import (
-	"crypto"
-	"crypto/rand"
-	"crypto/sha512"
-	"encoding/base32"
 	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strconv"
-	"strings"
 
-	"golang.org/x/crypto/ed25519"
 	_ "golang.org/x/crypto/ed25519"
 	_ "golang.org/x/crypto/sha3"
 )
@@ -53,73 +48,56 @@ func SaveOnionKeys(onionAddress string, privateKeyHex string, publicKeyHex strin
 		return err
 	}
 
-	publicBytes, _ := hex.DecodeString(publicKeyHex)
-	privateSeed, _ := hex.DecodeString(privateKeyHex)
-	privateBytes := TorExpandedSecretFromSeed(privateSeed)
+	hostname, privateKeyWithHeader, publicKeyWithHeader, err := GetExpandedSecrets(onionAddress, privateKeyHex, publicKeyHex)
+	if err != nil {
+		return err
+	}
 
-	// hostname file
-	os.WriteFile(filepath.Join(dir, "hostname"), []byte(onionAddress+"\n"), 0600)
+	if err := os.WriteFile(filepath.Join(dir, "hostname"), hostname, 0600); err != nil {
+		return err
+	}
 
-	// Keypair files: header + 3 byte padding + key
-	pubHeader := []byte("== ed25519v1-public: type0 ==\x00\x00\x00")
-	os.WriteFile(filepath.Join(dir, "hs_ed25519_public_key"),
-		append(pubHeader, publicBytes...), 0600)
+	if err := os.WriteFile(filepath.Join(dir, "hs_ed25519_public_key"), publicKeyWithHeader, 0600); err != nil {
+		return err
+	}
 
-	privHeader := []byte("== ed25519v1-secret: type0 ==\x00\x00\x00")
-	os.WriteFile(filepath.Join(dir, "hs_ed25519_secret_key"),
-		append(privHeader, privateBytes...), 0600)
+	if err := os.WriteFile(filepath.Join(dir, "hs_ed25519_secret_key"), privateKeyWithHeader, 0600); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func GenerateVanityOnion(TargetPrefix string) (string, string, string) {
-	for {
-		privateKey, publicKey := RandomKeyPair()
-		TryOnion := OnionFromPublicKey(publicKey)
-		if strings.HasPrefix(TryOnion, TargetPrefix) {
-			fmt.Println(TryOnion)
-			return TryOnion, privateKey, publicKey
-		}
-	}
-}
+func GetExpandedSecrets(onionAddress string, privateKeyHex string, publicKeyHex string) ([]byte, []byte, []byte, error) {
+	/* Keypair files: header + 3 byte padding + key
+	pubHeader := []byte("== ed25519v1-public: type0 ==\x00\x00\x00")
+	os.WriteFile(filepath.Join(dir, "hs_ed25519_public_key"),
+		append(pubHeader, publicBytes...), 0600)*/
 
-func RandomKeyPair() (privateHex string, publicHex string) {
-	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	/*privHeader := []byte("== ed25519v1-secret: type0 ==\x00\x00\x00")
+	os.WriteFile(filepath.Join(dir, "hs_ed25519_secret_key"),
+		append(privHeader, privateBytes...), 0600)*/
+
+	publicBytes, err := hex.DecodeString(publicKeyHex)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, err
 	}
-	return hex.EncodeToString(privateKey.Seed()), hex.EncodeToString(publicKey)
-}
 
-func TorExpandedSecretFromSeed(seed []byte) []byte {
-	expanded := sha512.Sum512(seed)
-	expanded[0] &= 248
-	expanded[31] &= 63
-	expanded[31] |= 64
-	return expanded[:]
-}
-
-func OnionFromPublicKey(PublicKeyHex string) string {
-	pubKeyBytes, err := hex.DecodeString(PublicKeyHex)
+	privateSeed, err := hex.DecodeString(privateKeyHex)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, err
 	}
-	version := byte(0x03)
 
-	hash := crypto.SHA3_256.New()
-	hash.Write([]byte(".onion checksum"))
-	hash.Write(pubKeyBytes)
-	hash.Write([]byte("\x03"))
-	checksum := hash.Sum(nil)[:2]
+	privateBytes := TorExpandedSecretFromSeed(privateSeed)
 
-	byteOnion := slices.Concat(pubKeyBytes, checksum, []byte{version})
+	hostname := []byte(onionAddress + "\n")
 
-	onion := string(base32.StdEncoding.EncodeToString(byteOnion))
-	onion = strings.ToLower(onion)
-	onion = strings.TrimRight(onion, "=")
-	onion = onion + ".onion"
+	publicKeyWithHeader := append([]byte("== ed25519v1-public: type0 ==\x00\x00\x00"), publicBytes...)
+	fmt.Println(publicKeyWithHeader)
 
-	return onion
+	privateKeyWithHeader := append([]byte("== ed25519v1-secret: type0 ==\x00\x00\x00"), privateBytes...)
+
+	return hostname, privateKeyWithHeader, publicKeyWithHeader, nil
 }
 
 // notes
