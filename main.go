@@ -93,8 +93,6 @@ func GetExpandedSecrets(onionAddress string, privateKeyHex string, publicKeyHex 
 	hostname := []byte(onionAddress + "\n")
 
 	publicKeyWithHeader := append([]byte("== ed25519v1-public: type0 ==\x00\x00\x00"), publicBytes...)
-	fmt.Println(publicKeyWithHeader)
-
 	privateKeyWithHeader := append([]byte("== ed25519v1-secret: type0 ==\x00\x00\x00"), privateBytes...)
 
 	return hostname, privateKeyWithHeader, publicKeyWithHeader, nil
