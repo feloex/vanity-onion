@@ -3,7 +3,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -66,36 +65,6 @@ func SaveOnionKeys(onionAddress string, privateKeyHex string, publicKeyHex strin
 	}
 
 	return nil
-}
-
-func GetExpandedSecrets(onionAddress string, privateKeyHex string, publicKeyHex string) ([]byte, []byte, []byte, error) {
-	/* Keypair files: header + 3 byte padding + key
-	pubHeader := []byte("== ed25519v1-public: type0 ==\x00\x00\x00")
-	os.WriteFile(filepath.Join(dir, "hs_ed25519_public_key"),
-		append(pubHeader, publicBytes...), 0600)*/
-
-	/*privHeader := []byte("== ed25519v1-secret: type0 ==\x00\x00\x00")
-	os.WriteFile(filepath.Join(dir, "hs_ed25519_secret_key"),
-		append(privHeader, privateBytes...), 0600)*/
-
-	publicBytes, err := hex.DecodeString(publicKeyHex)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	privateSeed, err := hex.DecodeString(privateKeyHex)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	privateBytes := TorExpandedSecretFromSeed(privateSeed)
-
-	hostname := []byte(onionAddress + "\n")
-
-	publicKeyWithHeader := append([]byte("== ed25519v1-public: type0 ==\x00\x00\x00"), publicBytes...)
-	privateKeyWithHeader := append([]byte("== ed25519v1-secret: type0 ==\x00\x00\x00"), privateBytes...)
-
-	return hostname, privateKeyWithHeader, publicKeyWithHeader, nil
 }
 
 // notes

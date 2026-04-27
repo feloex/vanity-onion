@@ -61,3 +61,24 @@ func OnionFromPublicKey(PublicKeyHex string) string {
 
 	return onion
 }
+
+func GetExpandedSecrets(onionAddress string, privateKeyHex string, publicKeyHex string) ([]byte, []byte, []byte, error) {
+	publicBytes, err := hex.DecodeString(publicKeyHex)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	privateSeed, err := hex.DecodeString(privateKeyHex)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	privateBytes := TorExpandedSecretFromSeed(privateSeed)
+
+	hostname := []byte(onionAddress + "\n")
+
+	publicKeyWithHeader := append([]byte("== ed25519v1-public: type0 ==\x00\x00\x00"), publicBytes...)
+	privateKeyWithHeader := append([]byte("== ed25519v1-secret: type0 ==\x00\x00\x00"), privateBytes...)
+
+	return hostname, privateKeyWithHeader, publicKeyWithHeader, nil
+}
