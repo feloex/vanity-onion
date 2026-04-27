@@ -51,7 +51,14 @@
 
         p {
             margin: 0 0 25px;
-        }    </style>
+        }
+        
+        .reveal-btn {
+            cursor: pointer;
+            color: #000000;
+            text-decoration: underline;
+        }
+    </style>
     <script src="wasm_exec.js"></script>
     <script>
         const go = new Go();
@@ -79,9 +86,8 @@
             card.innerHTML = 
                 "hostname: " + styledOnion + "\n" +
                 "public key: " + result.publicKey + "\n" +
-                "private key: " + result.privateKey + "\n";
+                "private key: <span class=\"reveal-btn\" onclick=\"this.outerHTML = '" + result.privateKey + "'\">[Click to reveal]</span>\n";
             
-
             const downloadBtn = document.createElement("a");
             card.appendChild(downloadBtn);
             downloadBtn.textContent = "download keys";
