@@ -62,6 +62,11 @@
             console.log("loaded wasm")
         });
 
+        // tor onion addresses only support lowercase letters and digits between 2 and 7
+        function formatInput(input) {
+            input.value = input.value.toLowerCase().replace(/[^a-z2-7]/g, '');
+        }
+
         function generate() {
             const prefix = document.getElementById("prefix").value;
             const result = window.generateVanityOnion(prefix);
@@ -91,7 +96,7 @@
     <p>Easily generate tor vanity addresses based on a given prefix.</p>
 
     <div class="controls">
-        <input type="text" id="prefix" placeholder="Prefix (e.g. abc)">
+        <input type="text" id="prefix" placeholder="Prefix (e.g. abc)" oninput="formatInput(this)">
         <button onclick="generate()">generate</button>
     </div>
 
