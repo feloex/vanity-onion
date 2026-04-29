@@ -67,9 +67,8 @@
         }
 
         function generate() {
-            const worker = new Worker("worker.js")
             const prefix = document.getElementById("prefix").value
-            worker.postMessage({prefix})
+            
 
             let currentResult = null
             let downloadBtn = null
@@ -77,40 +76,55 @@
             const numCores = navigator.hardwareConcurrency || 4
             console.log("numCores:", numCores)
 
-            worker.onmessage = function(e) {
-                if (e.data.type == "zip") {
-                    const zipBlob = new Blob([e.data.zipArray], {type: "application/zip"})
-                    downloadBtn.href = URL.createObjectURL(zipBlob)
-                    downloadBtn.download = currentResult.onion + ".zip"
-                    return
+            workers = [];
+
+            for (let i = 0; i < numCores; i++) {
+                const worker = new Worker("worker.js")
+                workers.push(worker)
+                worker.postMessage({prefix})
+
+                worker.onmessage = function(e) {
+                    if (e.data.type == "zip") {
+                        const zipBlob = new Blob([e.data.zipArray], {type: "application/zip"})
+                        downloadBtn.href = URL.createObjectURL(zipBlob)
+                        downloadBtn.download = currentResult.onion + ".zip"
+                        return
+                    }
+
+                    if (e.data.type == "keys"){
+                        console.log(`thanks ${i}`)
+                        workers.forEach(w => {
+                            if (w !== worker) w.terminate()
+                        })
+                        currentResult = e.data.result
+                        const result = currentResult
+
+                        const prefixmatchlen = prefix.length
+                        const onionString = result.onion
+                        const styledOnion = "<u>" + onionString.substring(0, prefixmatchlen) + "</u>" + onionString.substring(prefixmatchlen)
+
+                        const card = document.createElement("pre")
+                        card.className = "output-card"
+                        card.innerHTML = 
+                            "hostname: " + styledOnion + "\n" +
+                            "public key: " + result.publicKey + "\n" +
+                            "private key: <span class=\"reveal-btn\" onclick=\"this.outerHTML = '" + result.privateKey + "'\">[Click to reveal]</span>\n"
+
+                        downloadBtn = document.createElement("a")
+                        card.appendChild(downloadBtn)
+                        downloadBtn.textContent = "download keys"
+
+                        const container = document.getElementById("output-container")
+                        container.prepend(card)
+
+                        worker.postMessage({
+                            action: "downloadKeys",
+                            onion: result.onion,
+                            privateKey: result.privateKey,
+                            publicKey: result.publicKey
+                        })
+                    }
                 }
-
-                currentResult = e.data.result || e.data
-                const result = currentResult
-                const prefixmatchlen = prefix.length
-                const onionString = result.onion
-                const styledOnion = "<u>" + onionString.substring(0, prefixmatchlen) + "</u>" + onionString.substring(prefixmatchlen)
-
-                const card = document.createElement("pre")
-                card.className = "output-card"
-                card.innerHTML = 
-                    "hostname: " + styledOnion + "\n" +
-                    "public key: " + result.publicKey + "\n" +
-                    "private key: <span class=\"reveal-btn\" onclick=\"this.outerHTML = '" + result.privateKey + "'\">[Click to reveal]</span>\n"
-
-                downloadBtn = document.createElement("a")
-                card.appendChild(downloadBtn)
-                downloadBtn.textContent = "download keys"
-
-                const container = document.getElementById("output-container")
-                container.prepend(card)
-
-                worker.postMessage({
-                    action: "downloadKeys",
-                    onion: result.onion,
-                    privateKey: result.privateKey,
-                    publicKey: result.publicKey
-                })
             }
         }
     </script>
