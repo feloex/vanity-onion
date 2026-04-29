@@ -3,7 +3,7 @@ importScripts("wasm_exec.js")
 const go = new Go()
 let wasmReady = WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
     go.run(result.instance)
-    console.log("loaded wasm")
+    //console.log("loaded wasm")
 });
 
 onmessage = async function(e) {
@@ -15,7 +15,7 @@ onmessage = async function(e) {
         return
     }
 
-    console.log("generating onion for prefix:", e.data.prefix)
+    //console.log("generating onion for prefix:", e.data.prefix)
     const result = generateVanityOnion(e.data.prefix)
     postMessage({type: "keys", result: result})
 };
