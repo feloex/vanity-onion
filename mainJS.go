@@ -15,6 +15,11 @@ func generateVanityOnionJS(this js.Value, args []js.Value) any {
 	if len(args) > 0 {
 		targetPrefix = args[0].String()
 	}
+	var invalidChars string
+	targetPrefix, invalidChars = CleanPrefix(targetPrefix)
+	if len(invalidChars) > 0 {
+		js.Global().Get("console").Call("warn", "invalid characters ignored", invalidChars)
+	}
 
 	onion, privateKey, publicKey := GenerateVanityOnion(targetPrefix, func(attempts int) {
 		js.Global().Call("postMessage", map[string]interface{}{

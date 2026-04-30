@@ -26,6 +26,11 @@ func main() {
 	if len(os.Args) > 1 {
 		targetPrefix = os.Args[1]
 	}
+	var invalidChars string
+	targetPrefix, invalidChars = CleanPrefix(targetPrefix)
+	if len(invalidChars) > 0 {
+		fmt.Printf("invalid characters ignored: %q\n", invalidChars)
+	}
 	targetLength = len(targetPrefix)
 
 	if len(os.Args) > 2 {

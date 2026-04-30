@@ -12,6 +12,19 @@ import (
 	"strings"
 )
 
+func CleanPrefix(input string) (string, string) {
+	var valid, invalid strings.Builder
+	for _, c := range input {
+		l := []rune(strings.ToLower(string(c)))[0]
+		if (l >= 'a' && l <= 'z') || (l >= '2' && l <= '7') {
+			valid.WriteRune(l)
+		} else if !strings.ContainsRune(invalid.String(), c) {
+			invalid.WriteRune(c)
+		}
+	}
+	return valid.String(), invalid.String()
+}
+
 func GenerateVanityOnion(TargetPrefix string, callbackFunction func(int)) (string, string, string) {
 	count := 0
 	for {
