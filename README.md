@@ -7,7 +7,10 @@
 
 This tool easily generates a set amount of .onion addresses with a set prefix (vanity addresses).
 
-## Usage
+## Try the web version
+You can try the web version of this tool at https://feloex.github.io/vanity-onion
+
+## CLI Usage
 1. Download the latest release from the [releases page](https://github.com/feloex/vanity-onion/releases)
 2. On Linux/MacOS, you need to give the binary execute permissions:
 ```bash
