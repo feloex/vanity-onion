@@ -48,8 +48,8 @@ func main() {
 	}
 }
 
-func logProgress() {
-	totalAttempts += 10000
+func logProgress(attempts int) {
+	totalAttempts += attempts
 	elapsed := time.Since(startTime).Seconds()
 	hashrate, effort := CalculateStats(totalAttempts, targetLength, elapsed)
 	fmt.Printf("\r%.2fh/s effort: %.2f%%", hashrate, effort)

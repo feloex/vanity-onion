@@ -16,10 +16,10 @@ func generateVanityOnionJS(this js.Value, args []js.Value) any {
 		targetPrefix = args[0].String()
 	}
 
-	onion, privateKey, publicKey := GenerateVanityOnion(targetPrefix, func() {
+	onion, privateKey, publicKey := GenerateVanityOnion(targetPrefix, func(attempts int) {
 		js.Global().Call("postMessage", map[string]interface{}{
 			"type":   "progress",
-			"hashes": 10000,
+			"hashes": attempts,
 		})
 	})
 
