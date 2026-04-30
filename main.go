@@ -7,9 +7,16 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	_ "golang.org/x/crypto/ed25519"
 	_ "golang.org/x/crypto/sha3"
+)
+
+var (
+	totalAttempts int
+	startTime     time.Time
+	targetLength  int
 )
 
 func main() {
@@ -19,6 +26,7 @@ func main() {
 	if len(os.Args) > 1 {
 		targetPrefix = os.Args[1]
 	}
+	targetLength = len(targetPrefix)
 
 	if len(os.Args) > 2 {
 		n, err := strconv.Atoi(os.Args[2])
@@ -30,13 +38,22 @@ func main() {
 	}
 
 	for i := 0; i < count; i++ {
-		onion, privateKey, publicKey := GenerateVanityOnion(targetPrefix, nil)
+		totalAttempts = 0
+		startTime = time.Now()
+		onion, privateKey, publicKey := GenerateVanityOnion(targetPrefix, logProgress)
 		if err := SaveOnionKeys(onion, privateKey, publicKey); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	}
 }
+
+func logProgress() {
+	totalAttempts += 10000
+	elapsed := time.Since(startTime).Seconds()
+	hashrate, effort := CalculateStats(totalAttempts, targetLength, elapsed)
+	fmt.Printf("\r%.2fh/s effort: %.2f%%", hashrate, effort)
+} //attempts: %d  ... ,totalAttempts
 
 // Save onion credentials in a directory named after the onion address
 func SaveOnionKeys(onionAddress string, privateKeyHex string, publicKeyHex string) error {

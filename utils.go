@@ -24,7 +24,7 @@ func GenerateVanityOnion(TargetPrefix string, callbackFunction func()) (string, 
 		}
 
 		if strings.HasPrefix(TryOnion, TargetPrefix) {
-			fmt.Println(TryOnion)
+			fmt.Println("\nfound: " + TryOnion)
 			return TryOnion, privateKey, publicKey
 		}
 		count++
