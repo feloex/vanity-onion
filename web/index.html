@@ -61,10 +61,17 @@
     </style>
     <script src="wasm_exec.js"></script>
     <script>
+        const go = new Go()
+        let wasmReady = WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance)
+        });
+
         // tor onion addresses only support lowercase letters and digits between 2 and 7
         function formatInput(input) {
             input.value = input.value.toLowerCase().replace(/[^a-z2-7]/g, '')
         }
+
+        let hashrateInterval = null
 
         function generate() {
             const prefix = document.getElementById("prefix").value
@@ -76,23 +83,67 @@
             const numCores = navigator.hardwareConcurrency || 4
             console.log("numCores:", numCores)
 
-            workers = [];
+            if (hashrateInterval){
+                clearInterval(hashrateInterval)
+            }
 
-            for (let i = 0; i < numCores; i++) {
+            workers = [];
+            let totalAttempts = 0
+            const startTime = Date.now()
+            const expected = Math.pow(32, prefix.length)
+            
+            let statusEl = document.getElementById("status-text")
+
+            if (!statusEl) {
+                statusEl = document.createElement("p")
+                statusEl.id = "status-text"
+                document.getElementById("output-container").before(statusEl)
+            }
+            
+            let hashrate
+            let effort
+       
+            hashrateInterval = setInterval(() => {
+                const elapsedSeconds = (Date.now() - startTime) / 1000
+                if (elapsedSeconds > 0) {
+                    const stats = calculateStats(totalAttempts, prefix.length, elapsedSeconds)
+                    hashrate = stats.hashrate
+                    effort = stats.effort
+                    statusEl.innerText = `${hashrate.toFixed(3)}h/s\; ${effort.toFixed(1)}%`
+                }
+            }, 500)
+
+            for (let i = 0; i < numCores; i++){
                 const worker = new Worker("worker.js")
                 workers.push(worker)
-                worker.postMessage({prefix})
+                worker.postMessage({prefix})       
 
-                worker.onmessage = function(e) {
-                    if (e.data.type == "zip") {
+                worker.onmessage = function(e){
+                    if(e.data.type == "zip"){
                         const zipBlob = new Blob([e.data.zipArray], {type: "application/zip"})
                         downloadBtn.href = URL.createObjectURL(zipBlob)
                         downloadBtn.download = currentResult.onion + ".zip"
                         return
                     }
 
-                    if (e.data.type == "keys"){
+                    if(e.data.type == "progress"){
+                        totalAttempts += e.data.hashes
+                        return
+                    }
+
+                    if(e.data.type == "keys"){
                         console.log(`thanks ${i}`)
+                        if (hashrateInterval) clearInterval(hashrateInterval)
+                        
+                        const elapsedSeconds = (Date.now() - startTime) / 1000
+                        
+                        // calculate again to fix race condition
+                        const stats = calculateStats(totalAttempts, prefix.length, elapsedSeconds)
+                        effort = stats.effort
+                        
+                        // ${hashrate.toFixed(0)} h/s\; 
+                        statusEl.innerText = ""
+
                         workers.forEach(w => {
                             if (w !== worker) w.terminate()
                         })
@@ -113,6 +164,12 @@
                         downloadBtn = document.createElement("a")
                         card.appendChild(downloadBtn)
                         downloadBtn.textContent = "download keys"
+                        
+                        const statsSpan = document.createElement("span")
+                        statsSpan.textContent = `took ${elapsedSeconds.toFixed(2)}s; ${effort.toFixed(3)}% effort`
+                        statsSpan.style.float = "right"
+                        statsSpan.style.color = "#888"
+                        card.appendChild(statsSpan)
 
                         const container = document.getElementById("output-container")
                         container.prepend(card)

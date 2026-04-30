@@ -30,7 +30,7 @@ func main() {
 	}
 
 	for i := 0; i < count; i++ {
-		onion, privateKey, publicKey := GenerateVanityOnion(targetPrefix)
+		onion, privateKey, publicKey := GenerateVanityOnion(targetPrefix, nil)
 		if err := SaveOnionKeys(onion, privateKey, publicKey); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)

@@ -12,14 +12,22 @@ import (
 	"strings"
 )
 
-func GenerateVanityOnion(TargetPrefix string) (string, string, string) {
+func GenerateVanityOnion(TargetPrefix string, callbackFunction func()) (string, string, string) {
+	count := 0
 	for {
 		privateKey, publicKey := RandomKeyPair()
 		TryOnion := OnionFromPublicKey(publicKey)
+
+		if count >= 10000 {
+			callbackFunction()
+			count = 0
+		}
+
 		if strings.HasPrefix(TryOnion, TargetPrefix) {
 			fmt.Println(TryOnion)
 			return TryOnion, privateKey, publicKey
 		}
+		count++
 	}
 }
 

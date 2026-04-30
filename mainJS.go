@@ -16,7 +16,12 @@ func generateVanityOnionJS(this js.Value, args []js.Value) any {
 		targetPrefix = args[0].String()
 	}
 
-	onion, privateKey, publicKey := GenerateVanityOnion(targetPrefix)
+	onion, privateKey, publicKey := GenerateVanityOnion(targetPrefix, func() {
+		js.Global().Call("postMessage", map[string]interface{}{
+			"type":   "progress",
+			"hashes": 10000,
+		})
+	})
 
 	return map[string]interface{}{
 		"onion":      onion,
@@ -54,8 +59,22 @@ func downloadKeysJS(this js.Value, args []js.Value) any {
 	return jsZipArray
 }
 
+func calculateStatsJS(this js.Value, args []js.Value) any {
+	attempts := args[0].Int()
+	prefixLen := args[1].Int()
+	elapsedSeconds := args[2].Float()
+
+	hashrate, effort := CalculateStats(attempts, prefixLen, elapsedSeconds)
+
+	return map[string]interface{}{
+		"hashrate": hashrate,
+		"effort":   effort,
+	}
+}
+
 func main() {
 	js.Global().Set("downloadKeys", js.FuncOf(downloadKeysJS))
 	js.Global().Set("generateVanityOnion", js.FuncOf(generateVanityOnionJS))
+	js.Global().Set("calculateStats", js.FuncOf(calculateStatsJS))
 	<-make(chan struct{})
 }
